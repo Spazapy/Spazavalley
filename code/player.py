@@ -20,6 +20,8 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
+        self.stamina = 100
+        self.stamina_cooldown = 0
 
         #collision
         self.collision_sprites = collision_sprites
@@ -106,70 +108,88 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.animations[self.status][int(self.frame_index)]
 
-    def input(self):
+    def input(self, dt):
         keys = pygame.key.get_pressed()
 
-        #directions
+        # Directions
         if not self.timers["tool use"].active and not self.sleep:
-            if keys[pygame.K_LSHIFT]:
-                self.speed = 400
+            if self.stamina_cooldown > 0:
+                self.stamina_cooldown -= dt
+
+            if keys[pygame.K_LSHIFT] and self.stamina > 0 and self.stamina_cooldown <= 0:
+                self.speed = 800
+                self.stamina -= 0.1
+                print(self.stamina)
+                if self.stamina <= 0:
+                    self.stamina = 0
+                    self.stamina_cooldown = 5
             else:
                 self.speed = 200
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                self.direction.y = -1
-                self.status = "up"
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                self.direction.y = 1
-                self.status = "down"
-            else:
-                self.direction.y = 0
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                self.direction.x = 1
-                self.status = "right"
-            elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                self.direction.x = -1
-                self.status = "left"
-            else:
-                self.direction.x = 0
+                if self.stamina < 100 and self.stamina_cooldown <= 0:
+                    self.stamina += 0.1
 
-            #tool use
-            if keys[pygame.K_SPACE]:
-                # timer for the tool use
-                self.timers["tool use"].activate()
-                self.direction = pygame.math.Vector2()
-                self.frame_index = 0
+        # Check if cooldown is over
+        if self.stamina_cooldown <= 0:
+            if keys[pygame.K_LSHIFT] and self.stamina > 0:
+                self.speed = 800
+            elif not keys[pygame.K_LSHIFT] or self.stamina <= 0:
+                self.speed = 200
 
-            #change tool
-            if keys[pygame.K_q] and not self.timers["tool switch"].active:
-                self.timers["tool switch"].activate()
-                self.tool_index += 1
-                #if tool index > lenght of tools => tool index = 0
-                self.tool_index = self.tool_index if self.tool_index < len(self.tools) else 0
-                self.selected_tool = self.tools[self.tool_index]
+        # Movement directions
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.direction.y = -1
+            self.status = "up"
+            print(self.stamina)
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.direction.y = 1
+            self.status = "down"
+        else:
+            self.direction.y = 0
 
-            #seed use
-            if keys[pygame.K_LCTRL]:
-                # timer for the tool use
-                self.timers["seed use"].activate()
-                self.direction = pygame.math.Vector2()
-                self.frame_index = 0
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.direction.x = 1
+            self.status = "right"
+        elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.direction.x = -1
+            self.status = "left"
+        else:
+            self.direction.x = 0
 
-            #seed change
-            if keys[pygame.K_e] and not self.timers["seed switch"].active:
-                self.timers["seed switch"].activate()
-                self.seed_index += 1
-                #if seed index > lenght of seeds => tool index = 0
-                self.seed_index = self.seed_index if self.seed_index < len(self.seeds) else 0
-                self.selected_seed = self.seeds[self.seed_index]
+        # Tool use
+        if keys[pygame.K_SPACE]:
+            self.timers["tool use"].activate()
+            self.direction = pygame.math.Vector2()
+            self.frame_index = 0
 
-            if keys[pygame.K_RETURN]:
-                collided_interaction_sprite = pygame.sprite.spritecollide(self,self.interaction,False)
-                if collided_interaction_sprite:
-                    if collided_interaction_sprite[0].name == 'Trader':
-                        self.toggle_shop()
-                    else:    
-                        self.status = 'left_idle'
-                        self.sleep = True           
+        # Change tool
+        if keys[pygame.K_q] and not self.timers["tool switch"].active:
+            self.timers["tool switch"].activate()
+            self.tool_index += 1
+            self.tool_index = self.tool_index if self.tool_index < len(self.tools) else 0
+            self.selected_tool = self.tools[self.tool_index]
+
+        # Seed use
+        if keys[pygame.K_LCTRL]:
+            self.timers["seed use"].activate()
+            self.direction = pygame.math.Vector2()
+            self.frame_index = 0
+
+        # Seed change
+        if keys[pygame.K_e] and not self.timers["seed switch"].active:
+            self.timers["seed switch"].activate()
+            self.seed_index += 1
+            self.seed_index = self.seed_index if self.seed_index < len(self.seeds) else 0
+            self.selected_seed = self.seeds[self.seed_index]
+
+        # Interaction
+        if keys[pygame.K_RETURN]:
+            collided_interaction_sprite = pygame.sprite.spritecollide(self, self.interaction, False)
+            if collided_interaction_sprite:
+                if collided_interaction_sprite[0].name == 'Trader':
+                    self.toggle_shop()
+                else:
+                    self.status = 'left_idle'
+                    self.sleep = True        
 
 
 
@@ -225,7 +245,7 @@ class Player(pygame.sprite.Sprite):
         self.collision("vertical")
 
     def update(self, dt):
-        self.input()
+        self.input(dt)
         self.get_status()
         self.update_timers()
         self.get_target_pos()
