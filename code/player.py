@@ -23,6 +23,11 @@ class Player(pygame.sprite.Sprite):
         self.stamina = 100
         self.stamina_cooldown = 0
 
+        self.stamina_bar_width = 100  
+        self.stamina_bar_height = 10  
+        self.stamina_bar_color_full = GREEN  
+        self.stamina_bar_color_empty = BLACK  
+
         #collision
         self.collision_sprites = collision_sprites
         self.hitbox = self.rect.copy().inflate((-126,-70))
@@ -67,6 +72,18 @@ class Player(pygame.sprite.Sprite):
         # sound
         self.watering = pygame.mixer.Sound('audio/water.mp3')
         self.watering.set_volume(0.2)
+
+    def draw_stamina_bar(self, screen):
+        # Calculate width of the stamina bar based on current stamina
+        current_stamina_width = int((self.stamina / 100) * self.stamina_bar_width)
+        # Create the stamina bar rectangle
+        stamina_bar_rect = pygame.Rect(10, 10, self.stamina_bar_width, self.stamina_bar_height)
+        # Create a smaller rectangle representing current stamina
+        current_stamina_rect = pygame.Rect(stamina_bar_rect.x, stamina_bar_rect.y,current_stamina_width, stamina_bar_rect.height)
+        # Draw the empty stamina bar
+        pygame.draw.rect(screen, self.stamina_bar_color_empty, stamina_bar_rect)
+        # Draw the current stamina bar
+        pygame.draw.rect(screen, self.stamina_bar_color_full, current_stamina_rect)
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]

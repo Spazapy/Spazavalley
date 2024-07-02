@@ -195,6 +195,9 @@ class CameraGroup(pygame.sprite.Group):
                     offset_rect.center -= self.offset
                     self.display_surface.blit(sprite.image, offset_rect)
 
+        player.draw_stamina_bar(self.display_surface)
+
+        
                     #analytics
                     #if sprite == player:
                     #    pygame.draw.rect(self.display_surface, 'red',offset_rect,5)
