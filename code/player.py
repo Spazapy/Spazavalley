@@ -111,6 +111,10 @@ class Player(pygame.sprite.Sprite):
 
         #directions
         if not self.timers["tool use"].active and not self.sleep:
+            if keys[pygame.K_LSHIFT]:
+                self.speed = 400
+            else:
+                self.speed = 200
             if keys[pygame.K_UP] or keys[pygame.K_w]:
                 self.direction.y = -1
                 self.status = "up"
