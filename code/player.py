@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
         self.stamina = 100
         self.stamina_cooldown = 0
 
-        self.stamina_bar_width = 100  
+        self.stamina_bar_width = 200  
         self.stamina_bar_height = 10  
         self.stamina_bar_color_full = GREEN  
         self.stamina_bar_color_empty = BLACK  
@@ -77,7 +77,7 @@ class Player(pygame.sprite.Sprite):
         # Calculate width of the stamina bar based on current stamina
         current_stamina_width = int((self.stamina / 100) * self.stamina_bar_width)
         # Create the stamina bar rectangle
-        stamina_bar_rect = pygame.Rect(10, 10, self.stamina_bar_width, self.stamina_bar_height)
+        stamina_bar_rect = pygame.Rect(540, 700, self.stamina_bar_width, self.stamina_bar_height)
         # Create a smaller rectangle representing current stamina
         current_stamina_rect = pygame.Rect(stamina_bar_rect.x, stamina_bar_rect.y,current_stamina_width, stamina_bar_rect.height)
         # Draw the empty stamina bar
@@ -132,11 +132,10 @@ class Player(pygame.sprite.Sprite):
         if not self.timers["tool use"].active and not self.sleep:
             if self.stamina_cooldown > 0:
                 self.stamina_cooldown -= dt
-
+            # Sprint & Stamina logic
             if keys[pygame.K_LSHIFT] and self.stamina > 0 and self.stamina_cooldown <= 0:
-                self.speed = 800
+                self.speed = 500
                 self.stamina -= 0.1
-                print(self.stamina)
                 if self.stamina <= 0:
                     self.stamina = 0
                     self.stamina_cooldown = 5
@@ -145,18 +144,11 @@ class Player(pygame.sprite.Sprite):
                 if self.stamina < 100 and self.stamina_cooldown <= 0:
                     self.stamina += 0.1
 
-        # Check if cooldown is over
-        if self.stamina_cooldown <= 0:
-            if keys[pygame.K_LSHIFT] and self.stamina > 0:
-                self.speed = 800
-            elif not keys[pygame.K_LSHIFT] or self.stamina <= 0:
-                self.speed = 200
-
         # Movement directions
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.direction.y = -1
             self.status = "up"
-            print(self.stamina)
+            
         elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.direction.y = 1
             self.status = "down"
