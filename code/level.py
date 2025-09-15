@@ -238,12 +238,12 @@ class CameraGroup(pygame.sprite.Group):
                     self.display_surface.blit(sprite.image, offset_rect)
 
                     # analytics
-                    if sprite == player:
-                        pygame.draw.rect(self.display_surface, 'red',offset_rect,4)
-                        hitbox_rect = player.hitbox.copy()
-                        hitbox_rect.center = offset_rect.center
-                        pygame.draw.rect(self.display_surface, 'green', hitbox_rect,5)
-                        target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
-                        pygame.draw.circle(self.display_surface,'blue', target_pos,5)
+                    #if sprite == player:
+                    #    pygame.draw.rect(self.display_surface, 'red',offset_rect,4)
+                    #    hitbox_rect = player.hitbox.copy()
+                    #    hitbox_rect.center = offset_rect.center
+                    #    pygame.draw.rect(self.display_surface, 'green', hitbox_rect,5)
+                    #    target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
+                    #    pygame.draw.circle(self.display_surface,'blue', target_pos,5)
 
         player.draw_stamina_bar(self.display_surface)
