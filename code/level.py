@@ -1,6 +1,7 @@
 from typing import Iterable, Union
 import pygame
 from pygame.sprite import AbstractGroup
+
 from Settings import *
 from player import Player
 from overlay import Overlay
@@ -14,24 +15,35 @@ from random import randint
 from menu import Menu
 
 class Level:
-    def __init__(self):
+    def __init__(self, switch_level, current_map = 'map', player = None):
 
         #get the display surface
         self.display_surface = pygame.display.get_surface()
+        self.switch_level = switch_level
 
         #sprite groups
         self.all_sprites = CameraGroup()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
+        self.ground_sprite = None
         
-        self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites)
-        self.setup()
+        self.current_map = current_map
+        if self.current_map == 'map':
+            tmx_data = load_pygame("data/map.tmx")
+            self.setup(tmx_data, "graphics/world/ground.png", player)
+        else:
+            tmx_data = load_pygame("data/map2.tmx")
+            self.setup(tmx_data, "graphics/world/ground2.png", player)
+            
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
 
         # sky
-        self.rain = Rain(self.all_sprites)
+        if self.current_map == 'map':
+            self.rain = Rain(self.all_sprites, "graphics/world/ground.png")
+        else:
+            self.rain = Rain(self.all_sprites, "graphics/world/ground2.png")
         self.raining = randint(0,10) > 7
         self.soil_layer.raining = self.raining
         self.sky = Sky()
@@ -48,8 +60,8 @@ class Level:
         self.background_sound.play(loops = -1)
         
 
-    def setup(self):
-        tmx_data = load_pygame("data/map.tmx")
+    def setup(self, tmx_data, ground_image_path, player):
+        self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites, tmx_data, ground_image_path)
 
         #house
         for layer in ["HouseFloor", "HouseFurnitureBottom"]:
@@ -61,8 +73,12 @@ class Level:
                 Generic((x * TITLE_SIZE, y * TITLE_SIZE), surf, self.all_sprites, LAYERS["main"])
 
         #fence
-        for x, y, surf in tmx_data.get_layer_by_name("Fence").tiles():
-            Generic((x * TITLE_SIZE, y * TITLE_SIZE), surf, [self.all_sprites, self.collision_sprites])
+        try:
+            for x, y, surf in tmx_data.get_layer_by_name("Fence").tiles():
+                Generic((x * TITLE_SIZE, y * TITLE_SIZE), surf, [self.all_sprites, self.collision_sprites])
+        except ValueError:
+            for x, y, surf in tmx_data.get_layer_by_name("Fences").tiles():
+                Generic((x * TITLE_SIZE, y * TITLE_SIZE), surf, [self.all_sprites, self.collision_sprites])
 
         #water
         water_frames = import_folder("graphics/water")
@@ -83,31 +99,48 @@ class Level:
             WildFlower((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites])
 
         #collision tiles
-        for x, y, surf in tmx_data.get_layer_by_name("Collision").tiles():
-            Generic((x * TITLE_SIZE, y * TITLE_SIZE), pygame.Surface((TITLE_SIZE, TITLE_SIZE)), self.collision_sprites)
+        try:
+            for x, y, surf in tmx_data.get_layer_by_name("Collision").tiles():
+                Generic((x * TITLE_SIZE, y * TITLE_SIZE), pygame.Surface((TITLE_SIZE, TITLE_SIZE)), self.collision_sprites)
+        except ValueError:
+            for x, y, surf in tmx_data.get_layer_by_name("Collision2").tiles():
+                Generic((x * TITLE_SIZE, y * TITLE_SIZE), pygame.Surface((TITLE_SIZE, TITLE_SIZE)), self.collision_sprites)
 
         #Player
-        for obj in tmx_data.get_layer_by_name("Player"):
-             if obj.name == "Start":
-                self.player = Player(
-                    pos= (obj.x, obj.y), 
-                    group = self.all_sprites, 
-                    collision_sprites= self.collision_sprites,
-                    tree_sprites = self.tree_sprites,
-                    interaction = self.interaction_sprites,
-                    soil_layer = self.soil_layer,
-                    toggle_shop = self.toggle_shop)
-                               
-             if obj.name == "Bed":
-                 Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+        if player:
+            self.player = player
+            self.player.kill()
+            self.all_sprites.add(self.player)
+            self.player.collision_sprites = self.collision_sprites
+            self.player.tree_sprites = self.tree_sprites
+            self.player.interaction = self.interaction_sprites
+            self.player.soil_layer = self.soil_layer
+            for obj in tmx_data.get_layer_by_name("Player"):
+                if obj.name == "Start" or obj.name == "Spawn":
+                    self.player.pos.x = obj.x
+                    self.player.pos.y = obj.y
+        else:
+            for obj in tmx_data.get_layer_by_name("Player"):
+                 if obj.name == "Start" or obj.name == "Spawn":
+                    self.player = Player(
+                        pos= (obj.x, obj.y), 
+                        group = self.all_sprites, 
+                        collision_sprites= self.collision_sprites,
+                        tree_sprites = self.tree_sprites,
+                        interaction = self.interaction_sprites,
+                        soil_layer = self.soil_layer,
+                        toggle_shop = self.toggle_shop)
+                                   
+                 if obj.name == "Bed":
+                     Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+    
+                 if obj.name == "Trader":
+                     Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
 
-             if obj.name == "Trader":
-                 Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
 
-
-        Generic(
+        self.ground_sprite = Generic(
             pos = (0,0),
-            surf = pygame.image.load("graphics/world/ground.png").convert_alpha(), 
+            surf = pygame.image.load(ground_image_path).convert_alpha(), 
             groups = self.all_sprites,
             z = LAYERS["ground"])
         
@@ -152,6 +185,12 @@ class Level:
                         z = LAYERS['main'])
                     self.soil_layer.grid[plant.rect.centery // TITLE_SIZE][plant.rect.centerx // TITLE_SIZE].remove('P')
 
+    def switch_map(self):
+        if self.current_map == 'map':
+            self.switch_level('map2')
+        else:
+            self.switch_level('map')
+
 
     def run(self,dt):
         # drawing logic
@@ -175,6 +214,9 @@ class Level:
         if self.player.sleep:
             self.transition.play()
 
+        if self.player.rect.top < 0:
+            self.switch_map()
+
         #print(self.player.item_inventory)
         #print(self.shop_active)
 
@@ -195,14 +237,13 @@ class CameraGroup(pygame.sprite.Group):
                     offset_rect.center -= self.offset
                     self.display_surface.blit(sprite.image, offset_rect)
 
-        player.draw_stamina_bar(self.display_surface)
+                    # analytics
+                    if sprite == player:
+                        pygame.draw.rect(self.display_surface, 'red',offset_rect,4)
+                        hitbox_rect = player.hitbox.copy()
+                        hitbox_rect.center = offset_rect.center
+                        pygame.draw.rect(self.display_surface, 'green', hitbox_rect,5)
+                        target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
+                        pygame.draw.circle(self.display_surface,'blue', target_pos,5)
 
-        
-                    #analytics
-                    #if sprite == player:
-                    #    pygame.draw.rect(self.display_surface, 'red',offset_rect,5)
-                    #    hitbox_rect = player.hitbox.copy()
-                    #    hitbox_rect.center = offset_rect.center
-                    #    pygame.draw.rect(self.display_surface, 'green', hitbox_rect,5)
-                    #    target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
-                    #    pygame.draw.circle(self.display_surface,'blue', target_pos,5)
+        player.draw_stamina_bar(self.display_surface)

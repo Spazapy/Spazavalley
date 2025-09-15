@@ -8,7 +8,10 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Spaza Valley")
         self.clock = pygame.time.Clock()
-        self.level = Level()
+        self.level = Level(self.switch_level)
+
+    def switch_level(self, new_map):
+        self.level = Level(self.switch_level, new_map, self.level.player)
 
     def run(self):
         while True:

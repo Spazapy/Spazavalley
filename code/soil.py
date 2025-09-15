@@ -60,7 +60,7 @@ class Plant(pygame.sprite.Sprite):
 
 
 class SoilLayer:
-    def __init__(self, all_sprites, collision_sprites):
+    def __init__(self, all_sprites, collision_sprites, tmx_data, ground_image_path):
 
         # sprite groups
         self.all_sprites = all_sprites
@@ -73,7 +73,7 @@ class SoilLayer:
         self.soil_surfs = import_folder_dict("graphics/soil/")
         self.water_surfs = import_folder("graphics/soil_water/")
 
-        self.create_soil_grid()
+        self.create_soil_grid(tmx_data, ground_image_path)
         self.create_hit_rects()
 
         #sounds
@@ -83,12 +83,12 @@ class SoilLayer:
         self.plant_sound = pygame.mixer.Sound('audio/plant.wav')
         self.plant_sound.set_volume(0.2)
 
-    def create_soil_grid(self):
-        ground = pygame.image.load("graphics/world/ground.png")
+    def create_soil_grid(self, tmx_data, ground_image_path):
+        ground = pygame.image.load(ground_image_path)
         h_tiles, v_tiles = ground.get_width() // TITLE_SIZE, ground.get_height() // TITLE_SIZE
 
         self.grid = [[[] for col in range(h_tiles)] for row in range(v_tiles)]
-        for x,y, _ in load_pygame("data/map.tmx").get_layer_by_name('Farmable').tiles():
+        for x,y, _ in tmx_data.get_layer_by_name('Farmable').tiles():
             self.grid[y][x].append('F')
 
     def create_hit_rects(self):

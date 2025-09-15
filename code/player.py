@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
-        self.stamina = 100
+        self.stamina = 100   ### Move TO A NORMAL VALUE, only for debugging!
         self.stamina_cooldown = 0
 
         self.stamina_bar_width = 200  
