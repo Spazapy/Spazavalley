@@ -22,19 +22,23 @@ class Level:
         self.switch_level = switch_level
 
         #sprite groups
-        self.all_sprites = CameraGroup()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
-        self.ground_sprite = None
         
         self.current_map = current_map
         if self.current_map == 'map':
             tmx_data = load_pygame("data/map.tmx")
-            self.setup(tmx_data, "graphics/world/ground.png", player)
+            ground_image_path = "graphics/world/ground.png"
         else:
             tmx_data = load_pygame("data/map2.tmx")
-            self.setup(tmx_data, "graphics/world/ground2.png", player)
+            ground_image_path = "graphics/world/ground2.png"
+        
+        self.ground_sprite = Generic(pos=(0,0), surf=pygame.image.load(ground_image_path).convert_alpha(), groups=[], z=LAYERS["ground"])
+        self.all_sprites = CameraGroup(self.ground_sprite)
+        self.all_sprites.add(self.ground_sprite)
+
+        self.setup(tmx_data, ground_image_path, player)
             
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
@@ -136,13 +140,6 @@ class Level:
     
                  if obj.name == "Trader":
                      Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
-
-
-        self.ground_sprite = Generic(
-            pos = (0,0),
-            surf = pygame.image.load(ground_image_path).convert_alpha(), 
-            groups = self.all_sprites,
-            z = LAYERS["ground"])
         
     def player_add(self,item):
 
@@ -221,17 +218,22 @@ class Level:
         #print(self.shop_active)
 
 class CameraGroup(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self, ground_sprite):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
         self.offset = pygame.math.Vector2()
+        self.ground_sprite = ground_sprite
 
     def custom_draw(self, player):
-        self.offset.x = player.rect.centerx -SCREEN_WIDTH / 2 
-        self.offset.y = player.rect.centery -SCREEN_HEIGHT / 2 
+        self.offset.x = player.rect.centerx - SCREEN_WIDTH / 2
+        self.offset.y = player.rect.centery - SCREEN_HEIGHT / 2
+
+        # Clamp the offset to the map boundaries
+        self.offset.x = max(0, min(self.offset.x, self.ground_sprite.rect.width - SCREEN_WIDTH))
+        self.offset.y = max(0, min(self.offset.y, self.ground_sprite.rect.height - SCREEN_HEIGHT))
 
         for layer in LAYERS.values():
-            for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
+            for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
                 if sprite.z == layer:
                     offset_rect = sprite.rect.copy()
                     offset_rect.center -= self.offset
