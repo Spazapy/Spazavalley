@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.1" orientation="orthogonal" renderorder="right-down" width="50" height="40" tilewidth="64" tileheight="64" infinite="0" nextlayerid="17" nextobjectid="183">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="40" tilewidth="64" tileheight="64" infinite="0" nextlayerid="17" nextobjectid="187">
  <tileset firstgid="1" name="Grass" tilewidth="64" tileheight="64" tilecount="80" columns="10">
   <image source="../graphics/environment/Grass.png" width="640" height="512"/>
  </tileset>
@@ -47,34 +47,34 @@
  <tileset firstgid="241" name="Objects" tilewidth="96" tileheight="124" tilecount="10" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="0">
-   <image width="64" height="60" source="../graphics/objects/bush.png"/>
+   <image source="../graphics/objects/bush.png" width="64" height="60"/>
   </tile>
   <tile id="1">
-   <image width="56" height="68" source="../graphics/objects/merchant.png"/>
+   <image source="../graphics/objects/merchant.png" width="56" height="68"/>
   </tile>
   <tile id="2">
-   <image width="40" height="40" source="../graphics/objects/stump_medium.png"/>
+   <image source="../graphics/objects/stump_medium.png" width="40" height="40"/>
   </tile>
   <tile id="3">
-   <image width="32" height="40" source="../graphics/objects/stump_small.png"/>
+   <image source="../graphics/objects/stump_small.png" width="32" height="40"/>
   </tile>
   <tile id="4">
-   <image width="56" height="112" source="../graphics/objects/sunflower.png"/>
+   <image source="../graphics/objects/sunflower.png" width="56" height="112"/>
   </tile>
   <tile id="5">
-   <image width="96" height="124" source="../graphics/objects/tree_medium.png"/>
+   <image source="../graphics/objects/tree_medium.png" width="96" height="124"/>
   </tile>
   <tile id="6">
-   <image width="56" height="116" source="../graphics/objects/tree_small.png"/>
+   <image source="../graphics/objects/tree_small.png" width="56" height="116"/>
   </tile>
   <tile id="7">
-   <image width="44" height="48" source="../graphics/objects/flower.png"/>
+   <image source="../graphics/objects/flower.png" width="44" height="48"/>
   </tile>
   <tile id="8">
-   <image width="40" height="44" source="../graphics/objects/mushroom.png"/>
+   <image source="../graphics/objects/mushroom.png" width="40" height="44"/>
   </tile>
   <tile id="9">
-   <image width="52" height="52" source="../graphics/objects/mushrooms.png"/>
+   <image source="../graphics/objects/mushrooms.png" width="52" height="52"/>
   </tile>
  </tileset>
  <tileset firstgid="251" name="Bridge" tilewidth="64" tileheight="64" tilecount="15" columns="5">
@@ -626,9 +626,10 @@
   <object id="150" gid="302" x="2956.85" y="1825.7" width="56" height="112"/>
  </objectgroup>
  <objectgroup id="13" name="Player">
-  <object id="55" name="Spawn" x="1630.67" y="2534.67">
+  <object id="55" name="Spawn2" x="1630.67" y="2534.67">
    <point/>
   </object>
+  <object id="183" name="Map1" x="1536.48" y="2496" width="191.73" height="63.48"/>
  </objectgroup>
  <objectgroup id="12" name="Objects">
   <object id="1" gid="303" x="1794" y="2542" width="96" height="124"/>
@@ -707,7 +708,7 @@
   <object id="179" gid="250" x="3108" y="134" width="52" height="52"/>
   <object id="181" gid="250" x="2348" y="170" width="52" height="52"/>
  </objectgroup>
- <layer id="15" name="Collision2" width="50" height="40" visible="0">
+ <layer id="15" name="Collision2" width="50" height="40">
   <data encoding="csv">
 281,281,281,281,0,0,281,281,281,281,0,0,0,0,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,281,
 281,0,0,0,0,0,0,0,0,281,0,0,0,0,281,0,0,281,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,281,281,281,281,281,281,281,281,281,281,281,281,281,

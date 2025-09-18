@@ -15,7 +15,7 @@ from random import randint
 from menu import Menu
 
 class Level:
-    def __init__(self, switch_level, current_map = 'map', player = None):
+    def __init__(self, switch_level, current_map='map', spawn_location='Start', player=None):
 
         #get the display surface
         self.display_surface = pygame.display.get_surface()
@@ -38,7 +38,7 @@ class Level:
         self.all_sprites = CameraGroup(self.ground_sprite)
         self.all_sprites.add(self.ground_sprite)
 
-        self.setup(tmx_data, ground_image_path, player)
+        self.setup(tmx_data, ground_image_path, spawn_location, player)
             
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
@@ -64,7 +64,7 @@ class Level:
         self.background_sound.play(loops = -1)
         
 
-    def setup(self, tmx_data, ground_image_path, player):
+    def setup(self, tmx_data, ground_image_path, spawn_location, player):
         self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites, tmx_data, ground_image_path)
 
         #house
@@ -110,7 +110,18 @@ class Level:
             for x, y, surf in tmx_data.get_layer_by_name("Collision2").tiles():
                 Generic((x * TITLE_SIZE, y * TITLE_SIZE), pygame.Surface((TITLE_SIZE, TITLE_SIZE)), self.collision_sprites)
 
-        #Player
+        # Player and Interaction objects
+        player_spawn_pos = None
+        for obj in tmx_data.get_layer_by_name("Player"):
+            if obj.name == spawn_location:
+                player_spawn_pos = (obj.x, obj.y)
+            if obj.name == "Bed":
+                Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+            if obj.name == "Trader":
+                Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+            if obj.name in ('Map1', 'Map2'):
+                Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+
         if player:
             self.player = player
             self.player.kill()
@@ -119,27 +130,19 @@ class Level:
             self.player.tree_sprites = self.tree_sprites
             self.player.interaction = self.interaction_sprites
             self.player.soil_layer = self.soil_layer
-            for obj in tmx_data.get_layer_by_name("Player"):
-                if obj.name == "Start" or obj.name == "Spawn":
-                    self.player.pos.x = obj.x
-                    self.player.pos.y = obj.y
+            if player_spawn_pos:
+                self.player.pos.x = player_spawn_pos[0]
+                self.player.pos.y = player_spawn_pos[1]
         else:
-            for obj in tmx_data.get_layer_by_name("Player"):
-                 if obj.name == "Start" or obj.name == "Spawn":
-                    self.player = Player(
-                        pos= (obj.x, obj.y), 
-                        group = self.all_sprites, 
-                        collision_sprites= self.collision_sprites,
-                        tree_sprites = self.tree_sprites,
-                        interaction = self.interaction_sprites,
-                        soil_layer = self.soil_layer,
-                        toggle_shop = self.toggle_shop)
-                                   
-                 if obj.name == "Bed":
-                     Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
-    
-                 if obj.name == "Trader":
-                     Interaction((obj.x,obj.y), (obj.width,obj.height), self.interaction_sprites, obj.name)
+            if player_spawn_pos:
+                self.player = Player(
+                    pos=player_spawn_pos, 
+                    group=self.all_sprites, 
+                    collision_sprites=self.collision_sprites,
+                    tree_sprites=self.tree_sprites,
+                    interaction=self.interaction_sprites,
+                    soil_layer=self.soil_layer,
+                    toggle_shop=self.toggle_shop)
         
     def player_add(self,item):
 
@@ -182,11 +185,13 @@ class Level:
                         z = LAYERS['main'])
                     self.soil_layer.grid[plant.rect.centery // TITLE_SIZE][plant.rect.centerx // TITLE_SIZE].remove('P')
 
-    def switch_map(self):
-        if self.current_map == 'map':
-            self.switch_level('map2')
-        else:
-            self.switch_level('map')
+    def check_transition(self):
+        for sprite in self.interaction_sprites:
+            if sprite.rect.colliderect(self.player.hitbox):
+                if sprite.name == 'Map2':
+                    self.switch_level('map2', 'Spawn2')
+                elif sprite.name == 'Map1':
+                    self.switch_level('map', 'Spawn1')
 
 
     def run(self,dt):
@@ -211,8 +216,7 @@ class Level:
         if self.player.sleep:
             self.transition.play()
 
-        if self.player.rect.top < 0:
-            self.switch_map()
+        self.check_transition()
 
         #print(self.player.item_inventory)
         #print(self.shop_active)
