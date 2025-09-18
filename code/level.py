@@ -33,6 +33,7 @@ class Level:
         else:
             tmx_data = load_pygame("data/map2.tmx")
             ground_image_path = "graphics/world/ground2.png"
+        self.tmx_data = tmx_data
         
         self.ground_sprite = Generic(pos=(0,0), surf=pygame.image.load(ground_image_path).convert_alpha(), groups=[], z=LAYERS["ground"])
         self.all_sprites = CameraGroup(self.ground_sprite)
@@ -165,9 +166,10 @@ class Level:
 
         # apples on the trees
         for tree in self.tree_sprites.sprites():
-            for apple in tree.apple_sprites.sprites():
-                apple.kill()
-            tree.create_fruit()
+            if tree.alive:
+                for apple in tree.apple_sprites.sprites():
+                    apple.kill()
+                tree.create_fruit()
 
         # sky
         self.sky.start_color = [255,255,255]
